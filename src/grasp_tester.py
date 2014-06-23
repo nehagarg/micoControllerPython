@@ -28,33 +28,61 @@ from sensor_msgs.msg import (
 from geometry_msgs.msg import (
     PoseStamped
 )
-
+import numpy
+import copy
             
 def poseCallback(data, subscriber_no):
     print str(subscriber_no)
     print data
     #arm.set_pose_target(data)
     try:
+        dataCopy1 = copy.deepcopy(data)
+        
+        
         #object_pose = data
         (r, p, y) = tf.transformations.euler_from_quaternion([data.pose.orientation.x, data.pose.orientation.y, data.pose.orientation.z, data.pose.orientation.w])      
         tMatrix = tf.transformations.euler_matrix(r, p, y)
-        x_offset=-0.05
+        x_offset=-0.10
 
 
         data.pose.position.x=data.pose.position.x+(tMatrix[0,0]*x_offset)
         data.pose.position.y=data.pose.position.y + (tMatrix[1,0]*x_offset)
         data.pose.position.z=data.pose.position.z + (tMatrix[2,0]*x_offset)
+        
+        newRotMatrix = tf.transformations.euler_matrix(0, 1.57, 0)
+        transformedMatrix = numpy.dot(tMatrix, newRotMatrix)
 
-        p = p + 1.57
+        dataCopy1.pose.position.x=dataCopy1.pose.position.x - (transformedMatrix[0,2]*x_offset)
+        dataCopy1.pose.position.y=dataCopy1.pose.position.y - (transformedMatrix[1,2]*x_offset)
+        dataCopy1.pose.position.z=dataCopy1.pose.position.z - (transformedMatrix[2,2]*x_offset)
+       
+        dis = (dataCopy1.pose.position.x - data.pose.position.x) * (dataCopy1.pose.position.x - data.pose.position.x)
+        dis = dis + (dataCopy1.pose.position.y - data.pose.position.y) * (dataCopy1.pose.position.y - data.pose.position.y)
+        dis = dis + (dataCopy1.pose.position.z - data.pose.position.z) * (dataCopy1.pose.position.z - data.pose.position.z)
+        if (dis < 0.008):
+            p=p - 1.57
+        else:
+            p = p  + 1.57
+        # if y > 0:
+        #     p = p + 1.57
+        # else:
+        #     p = p -1.57
+        
+        print dis
+        
+        #q = tf.transformations.quaternion_from_matrix(transformedMatrix)
         q = tf.transformations.quaternion_from_euler(r, p, y)
         data.pose.orientation.x = q[0]
         data.pose.orientation.y = q[1]
         data.pose.orientation.z = q[2]
         data.pose.orientation.w = q[3]
-        
+        pub1.publish(data)
+        rospy.sleep(5)
         arm.set_joint_value_target(data, False)
         arm.set_planner_id("RRTConnectkConfigDefault")
         print "======= Waiting while setting joint value target"
+        #pub1 = rospy.Publisher("transformed/grasp_pose", PoseStamped, queue_size=10)
+        #pub1.publish(data)
         
         #hack
         #object_pose.pose.position.x = -0.26
@@ -104,6 +132,8 @@ if __name__ == '__main__':
                                     '/move_group/display_planned_path',
                                     DisplayTrajectory)
     print "hereeeeeeeeeeeeeeeeeeee"
+    global pub1
+    pub1 = rospy.Publisher("transformed/grasp_pose", PoseStamped, queue_size=10)
     i = 0
     #for i in range(0,200):
         #a = raw_input("Shall i subscribe to grasp" + str(i) + "? Say y/n ")
