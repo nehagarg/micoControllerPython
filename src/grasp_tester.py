@@ -36,7 +36,15 @@ def poseCallback(data, subscriber_no):
     #arm.set_pose_target(data)
     try:
         #object_pose = data
-        (r, p, y) = tf.transformations.euler_from_quaternion([data.pose.orientation.x, data.pose.orientation.y, data.pose.orientation.z, data.pose.orientation.w])
+        (r, p, y) = tf.transformations.euler_from_quaternion([data.pose.orientation.x, data.pose.orientation.y, data.pose.orientation.z, data.pose.orientation.w])      
+        tMatrix = tf.transformations.euler_matrix(r, p, y)
+        x_offset=-0.05
+
+
+        data.pose.position.x=data.pose.position.x+(tMatrix[0,0]*x_offset)
+        data.pose.position.y=data.pose.position.y + (tMatrix[1,0]*x_offset)
+        data.pose.position.z=data.pose.position.z + (tMatrix[2,0]*x_offset)
+
         p = p + 1.57
         q = tf.transformations.quaternion_from_euler(r, p, y)
         data.pose.orientation.x = q[0]
