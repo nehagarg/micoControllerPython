@@ -10,6 +10,7 @@ import sys
 from moveit_commander import RobotCommander, MoveGroupCommander, PlanningSceneInterface, roscpp_initialize, roscpp_shutdown
 from moveit_msgs.msg import Grasp, GripperTranslation, PlaceLocation, DisplayTrajectory
 import tf
+import traceback
 
 from control_msgs.msg import (
     FollowJointTrajectoryAction,
@@ -84,34 +85,52 @@ def poseCallback(data, subscriber_no):
         #pub1 = rospy.Publisher("transformed/grasp_pose", PoseStamped, queue_size=10)
         #pub1.publish(data)
         
-        #hack
-        #object_pose.pose.position.x = -0.26
-        #scene.add_box("part", object_pose, (0.05, 0.05, 0.1))
+        
+        waypoints = []
+        waypoints.append(data.pose)
+        dataHandLink = tl.transformPose("Hand_Link", data)
+        dataHandLink.pose.position.z= dataHandLink.pose.position.z + x_offset
+        wpose = tl.transformPose(arm.get_pose_reference_frame(), dataHandLink).pose
+        waypoints.append(copy.deepcopy(wpose))
+        
         rospy.sleep(5)
         plan1 = arm.plan()
 
         print "============ Waiting while RVIZ displays plan1..."
         rospy.sleep(5)
-    
+        print "============ Computing cartesian path..."
+        (plan2, fraction) = arm.compute_cartesian_path(
+                             waypoints,   # waypoints to follow
+                             0.01,        # eef_step
+                             0.0, False)         # jump_threshold
 
-        print "============ Visualizing plan1"
+        
+        print "============ Visualizing plan1 and plan2"
         display_trajectory = DisplayTrajectory()
 
         display_trajectory.trajectory_start = robot.get_current_state()
         display_trajectory.trajectory.append(plan1)
-        #display_trajectory_publisher.publish(display_trajectory);
+        display_trajectory.trajectory.append(plan2)
+        
+        display_trajectory_publisher.publish(display_trajectory);
 
-        print "============ Waiting while plan1 is visualized (again)..."
+        #print "============ Waiting while plan1 is visualized (again)..."
         #rospy.sleep(5)
         a = raw_input("Shall i execute grasp" + str(subscriber_no) + "? Say y/n ")
         
         if a == "y":
             print "executing"
-            arm.go(wait=True)
+            #arm.go(wait=True)
+            
+            arm.execute(plan1)
+            rospy.sleep(5)
+            arm.execute(plan2)
+            rospy.sleep(5)
         if a == "n":
             print "not executing"
-    except:
+    except Exception, err:
         print "Exception thrown while path planning for grasp " + str(subscriber_no)
+        print traceback.format_exc()
     
     i = subscriber_no + 1
     rospy.Subscriber("pick_and_place_app/grasp_pose_" + str(i), PoseStamped, poseCallback, i)
@@ -132,6 +151,8 @@ if __name__ == '__main__':
                                     '/move_group/display_planned_path',
                                     DisplayTrajectory)
     print "hereeeeeeeeeeeeeeeeeeee"
+    global tl
+    tl = tf.TransformListener()
     global pub1
     pub1 = rospy.Publisher("transformed/grasp_pose", PoseStamped, queue_size=10)
     i = 0
