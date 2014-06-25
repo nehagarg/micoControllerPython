@@ -105,21 +105,9 @@ def poseCallback(data, subscriber_no):
 
         print "============ Waiting while RVIZ displays plan1..."
         rospy.sleep(5)
-        print "============ Computing cartesian path..."
-        (plan2, fraction) = arm.compute_cartesian_path(
-                             waypoints,   # waypoints to follow
-                             0.01,        # eef_step
-                             0.0, False)         # jump_threshold
-
-        print fraction
-        print "============ Visualizing plan1 and plan2"
-        display_trajectory = DisplayTrajectory()
-
-        display_trajectory.trajectory_start = robot.get_current_state()
-        display_trajectory.trajectory.append(plan1)
-        display_trajectory.trajectory.append(plan2)
         
-        display_trajectory_publisher.publish(display_trajectory);
+
+        
 
         #print "============ Waiting while plan1 is visualized (again)..."
         #rospy.sleep(5)
@@ -131,8 +119,27 @@ def poseCallback(data, subscriber_no):
             
             arm.execute(plan1)
             rospy.sleep(5)
-            #arm.execute(plan2)
-            #rospy.sleep(5)
+            b = raw_input("Shall i plan ik path" + str(subscriber_no) + "? Say y/n ")
+            if b == 'y' :
+                print "============ Computing cartesian path..."
+                (plan2, fraction) = arm.compute_cartesian_path(
+                             waypoints,   # waypoints to follow
+                             0.01,        # eef_step
+                             0.0, False)         # jump_threshold
+
+                print fraction
+                print "============ Visualizing plan1 and plan2"
+                display_trajectory = DisplayTrajectory()
+                display_trajectory.trajectory_start = robot.get_current_state()
+                display_trajectory.trajectory.append(plan1)
+                display_trajectory.trajectory.append(plan2)
+        
+                display_trajectory_publisher.publish(display_trajectory);
+                c = raw_input("Shall i execute ik path" + str(subscriber_no) + "? Say y/n ")
+                if c == 'y' :
+                    print "executing"
+                    arm.execute(plan2)
+                    #rospy.sleep(5)
         if a == "n":
             print "not executing"
     except Exception, err:
