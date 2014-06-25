@@ -27,7 +27,7 @@ from sensor_msgs.msg import (
 from geometry_msgs.msg import (
     PoseStamped
 )
-
+import copy
 class FollowJointTrajectoryActionServer:
     def __init__(self):
        
@@ -49,9 +49,17 @@ class FollowJointTrajectoryActionServer:
 
         end_time = trajectory_points[-1].time_from_start.to_sec()
         control_rate = rospy.Rate(self._control_rate)
+        i=num_points
+        rospy.loginfo("the num of point is %i" % i )
+
         for trajectory_point in trajectory_points:
             js = JointState()
-            js.name = joint_names
+            #rospy.loginfo("the length of js.name is %i" %len(js.name))
+            js.name=copy.deepcopy(joint_names)
+            for j in range(len(joint_names)):
+                #rospy.loginfo("j is %i" % j)
+                js.name[j] = js.name[j]+'_'+str(i)
+            i=i-1
             js.position = trajectory_point.positions
             self.jointStatePublisher.publish(js)
             control_rate.sleep()
@@ -75,5 +83,5 @@ if __name__ == '__main__':
    
     rospy.init_node('mico_controller_server')
     server = FollowJointTrajectoryActionServer()
-    #server.executeFromFile("trajecoryGoalMsg.data")
+    #server.executeFromFile("../trajecoryGoalMsg.data")
     rospy.spin()
