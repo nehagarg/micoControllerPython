@@ -61,9 +61,12 @@ def poseCallback(data, subscriber_no):
         dis = dis + (dataCopy1.pose.position.y - data.pose.position.y) * (dataCopy1.pose.position.y - data.pose.position.y)
         dis = dis + (dataCopy1.pose.position.z - data.pose.position.z) * (dataCopy1.pose.position.z - data.pose.position.z)
         if (dis < 0.008):
-            p=p - 1.57
+            #p=p - 1.57
+            pass
         else:
-            p = p  + 1.57
+            newRotMatrix = tf.transformations.euler_matrix(0, -1.57, 0)
+            transformedMatrix = numpy.dot(tMatrix, newRotMatrix)
+            #p = p  + 1.57
         # if y > 0:
         #     p = p + 1.57
         # else:
@@ -71,8 +74,8 @@ def poseCallback(data, subscriber_no):
         
         print dis
         
-        #q = tf.transformations.quaternion_from_matrix(transformedMatrix)
-        q = tf.transformations.quaternion_from_euler(r, p, y)
+        q = tf.transformations.quaternion_from_matrix(transformedMatrix)
+        #q = tf.transformations.quaternion_from_euler(r, p, y)
         data.pose.orientation.x = q[0]
         data.pose.orientation.y = q[1]
         data.pose.orientation.z = q[2]
@@ -88,8 +91,12 @@ def poseCallback(data, subscriber_no):
         
         waypoints = []
         waypoints.append(data.pose)
+        data.header.stamp = rospy.Time(0)
+        #tl.waitForTransform(arm.get_pose_reference_frame(), "Hand_Link", data.header.stamp, rospy.Duration(3.0))
         dataHandLink = tl.transformPose("Hand_Link", data)
         dataHandLink.pose.position.z= dataHandLink.pose.position.z + x_offset
+        dataHandLink.header.stamp = rospy.Time(0)
+        #tl.waitForTransform("Hand_Link", arm.get_pose_reference_frame(), dataHandLink.header.stamp, rospy.Duration(3.0))
         wpose = tl.transformPose(arm.get_pose_reference_frame(), dataHandLink).pose
         waypoints.append(copy.deepcopy(wpose))
         
@@ -104,7 +111,7 @@ def poseCallback(data, subscriber_no):
                              0.01,        # eef_step
                              0.0, False)         # jump_threshold
 
-        
+        print fraction
         print "============ Visualizing plan1 and plan2"
         display_trajectory = DisplayTrajectory()
 
@@ -124,8 +131,8 @@ def poseCallback(data, subscriber_no):
             
             arm.execute(plan1)
             rospy.sleep(5)
-            arm.execute(plan2)
-            rospy.sleep(5)
+            #arm.execute(plan2)
+            #rospy.sleep(5)
         if a == "n":
             print "not executing"
     except Exception, err:

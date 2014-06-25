@@ -96,13 +96,20 @@ if __name__=='__main__':
     grasp_pose = PoseStamped()
     grasp_pose.header.frame_id = "base_link"
 
-    grasp_pose.pose.position.x = -0.312728
-    grasp_pose.pose.position.y = -0.3754694
-    grasp_pose.pose.position.z =  0.0149573836412
-    grasp_pose.pose.orientation.x = 0.76326547256
-    grasp_pose.pose.orientation.y = -0.518249174456
-    grasp_pose.pose.orientation.z = -0.313073506604
-    grasp_pose.pose.orientation.w = -0.225451970573
+    #grasp_pose.pose.position.x = -0.185051114819
+    #grasp_pose.pose.position.y = -0.377031225539
+    #grasp_pose.pose.position.z =  0.113820043342
+    #grasp_pose.pose.orientation.x = -0.41152742331
+    #grasp_pose.pose.orientation.y = 0.808457155377
+    #grasp_pose.pose.orientation.z = 0.151056089743
+    #grasp_pose.pose.orientation.w = 0.392713974204
+    grasp_pose.pose.position.x = -0.290249969669
+    grasp_pose.pose.position.y = -0.340954593445
+    grasp_pose.pose.position.z =  0.0457171827704
+    grasp_pose.pose.orientation.x = 0.932854284992
+    grasp_pose.pose.orientation.y = -0.299545609306
+    grasp_pose.pose.orientation.z = -0.195565932636
+    grasp_pose.pose.orientation.w = 0.0425355958033
     
     #object_pose = grasp_pose
     #object_pose.pose.position.x = -0.26
