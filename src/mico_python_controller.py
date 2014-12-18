@@ -18,6 +18,7 @@ from control_msgs.msg import (
 
 from trajectory_msgs.msg import (
     JointTrajectoryPoint,
+    JointTrajectory
 )
 
 from sensor_msgs.msg import (
@@ -38,9 +39,10 @@ class FollowJointTrajectoryActionServer:
         self._result = FollowJointTrajectoryResult()
         self._control_rate = 10.0
         self.jointStatePublisher = rospy.Publisher('trajectory_joint_state', JointState, queue_size=10)
+        #self.jointTrajectoryPublisher=rospy.Publisher('trajectory_joint_velocity',JointTrajectory,queue_size=10)
     
     def execute(self, goal):
-        #pickle.dump(goal, open("trajecoryGoalMsg.data", "wb"))
+        #pickle.dump(goal, open("trajecoryGoalMsg3.data", "wb"))
         joint_names = goal.trajectory.joint_names
         trajectory_points = goal.trajectory.points
         num_points = len(trajectory_points)
@@ -51,6 +53,7 @@ class FollowJointTrajectoryActionServer:
         control_rate = rospy.Rate(self._control_rate)
         i=num_points
         rospy.loginfo("the num of point is %i" % i )
+        #self.jointTrajectoryPublisher.publish(goal.trajectory)
 
         for trajectory_point in trajectory_points:
             js = JointState()
@@ -83,5 +86,5 @@ if __name__ == '__main__':
    
     rospy.init_node('mico_controller_server')
     server = FollowJointTrajectoryActionServer()
-    #server.executeFromFile("../trajecoryGoalMsg.data")
+    #server.executeFromFile("trajecoryGoalMsg2.data")
     rospy.spin()
