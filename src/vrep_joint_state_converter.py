@@ -15,7 +15,7 @@ def jointStateConverter(vrep_joint_state):
     output = JointState()
     output.name =["Shoulder_Joint", "Arm_Joint", "Forearm_Joint", "Wrist_1_Joint","Wrist_2_Joint","Hand_Joint"]
     output.position = list(vrep_joint_state.position[0:6])
-    position_offset = [3.14, -1.57, 1.57, 3.14, 3.14,3.14]
+    position_offset = [3.14, -1.57, 1.57, 3.14, 0,3.14]
     for i in range(0,6):
         #output.position[i] = 1
         output.position[i] = output.position[i] - position_offset[i]
